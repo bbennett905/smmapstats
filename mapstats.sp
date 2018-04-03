@@ -1,13 +1,10 @@
-#pragma semicolon 1
-
-#define DEBUG
-
-#define PLUGIN_AUTHOR ""
-#define PLUGIN_VERSION "0.01"
-
 #include <sourcemod>
 #include <sdktools>
 
+#define PLUGIN_AUTHOR "Lithium"
+#define PLUGIN_VERSION "0.01"
+
+#pragma semicolon 1
 #pragma newdecls required
 
 public Plugin myinfo = 
@@ -16,7 +13,7 @@ public Plugin myinfo =
 	author = PLUGIN_AUTHOR,
 	description = "Gathers data on map playtime and population",
 	version = PLUGIN_VERSION,
-	url = ""
+	url = "github.com/bbennett905"
 };
 
 #define PREFIX "[MapStats]"
