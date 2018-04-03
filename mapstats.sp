@@ -3,7 +3,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR ""
-#define PLUGIN_VERSION "0.00"
+#define PLUGIN_VERSION "0.01"
 
 #include <sourcemod>
 #include <sdktools>
@@ -12,9 +12,9 @@
 
 public Plugin myinfo = 
 {
-	name = "",
+	name = "MapStats",
 	author = PLUGIN_AUTHOR,
-	description = "",
+	description = "Gathers data on map playtime and population",
 	version = PLUGIN_VERSION,
 	url = ""
 };
