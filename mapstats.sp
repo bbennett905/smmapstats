@@ -194,7 +194,6 @@ public Action CommandViewStats(int client, int argc)
 	menu.AddItem("playertime", "Player Time");
 	menu.AddItem("servertime", "Server Time");
 	menu.AddItem("datapoints", "Number of Data Points");
-	menu.AddItem("summary", "Summary");
 	menu.Display(client, MENU_TIME_FOREVER);
 	return Plugin_Handled;
 }
@@ -255,11 +254,6 @@ public int MenuViewStats(Menu menu, MenuAction action, int client, int position)
 				    "GROUP BY map_name " ...
 				    "ORDER BY COUNT(data_id) DESC", ipSafe);
 			}
-			else if (StrEqual(info, "summary"))
-			{
-				//TODO do this
-				PrintToChat(client, PREFIX ... "This feature is not yet implemented!");
-			}
 			MapStatsDatabase.Query(SQLSelectData, query, client, DBPrio_Normal);
 		}
 	}
@@ -279,8 +273,10 @@ public void SQLSelectData(Database db, DBResultSet result, const char[] error, i
 		return;
 	}
 
-	PrintToConsole(client, " ==================== MapStats ====================");
-	PrintToConsole(client, " Map name                       | Player Time (Hrs) | Server Time (Hrs) | Data Points");
+	PrintToConsole(client, "");
+	PrintToConsole(client, "======================================- MapStats -=======================================");
+	PrintToConsole(client, "| Map name                        | Player Time (Hrs) | Server Time (Hrs) | Data Points |");
+	PrintToConsole(client, "|---------------------------------------------------------------------------------------|");
 	while (result.FetchRow())
 	{
 		char mapname[32];
@@ -289,8 +285,9 @@ public void SQLSelectData(Database db, DBResultSet result, const char[] error, i
 		float servertime = result.FetchInt(2) / 60.0;
 		int datapoints = result.FetchInt(3);
 
-		PrintToConsole(client, "%-32s|          %8.2f |          %8.2f |   %8d", 
+		PrintToConsole(client, "| %-32s|          %8.2f |          %8.2f |   %8d |", 
 			mapname, playertime, servertime, datapoints);
 	}
+	PrintToConsole(client, "=========================================================================================");
 	PrintToChat(client, PREFIX ... "Check your console for output.");
 }
