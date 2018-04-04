@@ -7,7 +7,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "0.2"
+#define PLUGIN_VERSION "0.3"
 
 public Plugin myinfo = 
 {
@@ -18,7 +18,7 @@ public Plugin myinfo =
 	url = "github.com/bbennett905"
 };
 
-#define PREFIX "[MapStats]"
+#define PREFIX "[MapStats] "
 #define DATABASE "mapstats"
 #define MAX_MAPS 100
 
@@ -240,7 +240,7 @@ public int MenuViewStats(Menu menu, MenuAction action, int client, int position)
 				//TODO do this
 				PrintToChat(client, PREFIX ... "This feature is not yet implemented!");
 			}
-			MapStatsDatabase.Query(SQLDefaultQuery, query, data, DBPrio_Normal);
+			MapStatsDatabase.Query(SQLSelectData, query, data, DBPrio_Normal);
 		}
 	}
 }
@@ -288,9 +288,9 @@ public void SQLSelectData(Database db, DBResultSet result, const char[] error, D
 			if (StrEqual(buffer, mapname, false))
 			{
 				//Entry for this map already exists
-				table[i].ServerTime += interval;
-				table[i].PlayerTime += players * interval;
-				table[i].DataPoints += 1;
+				table[i].ServerTime = table[i].ServerTime + interval;
+				table[i].PlayerTime = table[i].ServerTime + (players * interval);
+				table[i].DataPoints = table[i].ServerTime + 1;
 				success = true;
 				break;
 			}
