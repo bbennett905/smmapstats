@@ -1,13 +1,12 @@
 #include <sourcemod>
 #include <sdktools>
 #include <dynamic>
-#include <mapstats>
 
 #pragma semicolon 1
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "0.4"
+#define PLUGIN_VERSION "0.5"
 
 public Plugin myinfo = 
 {
@@ -192,8 +191,8 @@ public Action CommandViewStats(int client, int argc)
 	Menu menu = new Menu(MenuViewStats);
 	menu.SetTitle("View stats by...");
 	menu.AddItem("name", "Map Name");
-	menu.AddItem("servertime", "Server Time");
 	menu.AddItem("playertime", "Player Time");
+	menu.AddItem("servertime", "Server Time");
 	menu.AddItem("datapoints", "Number of Data Points");
 	menu.AddItem("summary", "Summary");
 	menu.Display(client, MENU_TIME_FOREVER);
@@ -224,186 +223,74 @@ public int MenuViewStats(Menu menu, MenuAction action, int client, int position)
 					"SELECT server_id FROM `mapstats_servers` WHERE ip = '%s'" ...
 		    	");", ipSafe);
 		    	
-			DataPack data = new DataPack();
-			data.WriteCell(client);
 			if (StrEqual(info, "name"))
 			{
-				data.WriteCell(ByName);
+				Format(query, sizeof(query), "SELECT map_name, SUM(player_count * data_interval), SUM(data_interval), COUNT(data_id) " ...
+				    "FROM `mapstats_data` " ...
+				    "WHERE server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s') " ...
+				    "GROUP BY map_name " ...
+				    "ORDER BY map_name ASC", ipSafe);
 			}
 			else if (StrEqual(info, "servertime"))
 			{
-				data.WriteCell(ByServerTime);
+				Format(query, sizeof(query), "SELECT map_name, SUM(player_count * data_interval), SUM(data_interval), COUNT(data_id) " ...
+				    "FROM `mapstats_data` " ...
+				    "WHERE server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s') " ...
+				    "GROUP BY map_name " ...
+				    "ORDER BY SUM(player_count * data_interval) DESC", ipSafe);
 			}
 			else if (StrEqual(info, "playertime"))
 			{
-				data.WriteCell(ByPlayerTime);
+				Format(query, sizeof(query), "SELECT map_name, SUM(player_count * data_interval), SUM(data_interval), COUNT(data_id) " ...
+				    "FROM `mapstats_data` " ...
+				    "WHERE server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s') " ...
+				    "GROUP BY map_name " ...
+				    "ORDER BY SUM(data_interval) DESC", ipSafe);
 			}
 			else if (StrEqual(info, "datapoints"))
 			{
-				data.WriteCell(ByDataPoints);
+				Format(query, sizeof(query), "SELECT map_name, SUM(player_count * data_interval), SUM(data_interval), COUNT(data_id) " ...
+				    "FROM `mapstats_data` " ...
+				    "WHERE server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s') " ...
+				    "GROUP BY map_name " ...
+				    "ORDER BY COUNT(data_id) DESC", ipSafe);
 			}
 			else if (StrEqual(info, "summary"))
 			{
 				//TODO do this
 				PrintToChat(client, PREFIX ... "This feature is not yet implemented!");
 			}
-			MapStatsDatabase.Query(SQLSelectData, query, data, DBPrio_Normal);
+			MapStatsDatabase.Query(SQLSelectData, query, client, DBPrio_Normal);
 		}
 	}
 }
 
-public void SQLSelectData(Database db, DBResultSet result, const char[] error, DataPack data)
+public void SQLSelectData(Database db, DBResultSet result, const char[] error, int client)
 {
 	if (result == null)
 	{
 		LogError(PREFIX ... "SQLSelectData error: %s", error);
 		return;
 	}
-	data.Reset();
-	int client = data.ReadCell();
-	SortMethod sort = data.ReadCell();
-	delete data;
 	
 	if (result.RowCount < 1)
 	{
 		PrintToChat(client, PREFIX ... "No data found!");
 		return;
 	}
-	
-	PrintToChat(client, PREFIX ... "Parsing data...");
-	
-	MapStatsEntry table[MAX_MAPS];
-	for (int i = 0; i < MAX_MAPS; i++)
-	{
-		table[i] = MapStatsEntry();
-	}
-	
-	int max = 0;
-	//Populate the table with the results 
-	while (result.FetchRow())
-	{
-		char mapname[PLATFORM_MAX_PATH];
-		result.FetchString(0, mapname, sizeof(mapname));
-		int interval = result.FetchInt(1);
-		int players = result.FetchInt(2);
-		
-		bool success = false;
-		for (int i = 0; i < MAX_MAPS; i++)
-		{
-			char buffer[PLATFORM_MAX_PATH];
-			table[i].GetMapName(buffer, sizeof(buffer));
-			if (StrEqual(buffer, mapname, false))
-			{
-				//Entry for this map already exists
-				table[i].ServerTime = table[i].ServerTime + interval;
-				table[i].PlayerTime = table[i].ServerTime + (players * interval);
-				table[i].DataPoints = table[i].ServerTime + 1;
-				success = true;
-				break;
-			}
-			else if (StrEqual(buffer, "", false))
-			{
-				//Map not found, so add it here
-				table[i].SetMapName(buffer);
-				table[i].ServerTime = interval;
-				table[i].PlayerTime = players * interval;
-				table[i].DataPoints = 1;
-				max = i;
-				success = true;
-				break;
-			}
-		}
-		if (!success)
-		{
-			PrintToChat(client, PREFIX ... "Error: too many maps! Ask the dev to increase map limit");
-			break;
-		}
-	}
-	
-	//Now, sort table based on what was selected earlier
-	//TODO This is super ugly - clean this up at some point
-	switch (sort)
-	{
-		case ByName:
-		{
-			//Largest N right now is 100, so insertion sort isn't really that bad
-			int i = 1;
-			while (i < max + 1)
-			{
-				MapStatsEntry temp = table[i];
-				int j = i - 1;
-				char mapL[PLATFORM_MAX_PATH];
-				char mapR[PLATFORM_MAX_PATH];
-				table[j].GetMapName(mapL, sizeof(mapL));
-				temp.GetMapName(mapR, sizeof(mapR));
-				while (j >= 0 && strcmp(mapL, mapR, false))
-				{
-					table[j + 1] = table[j];
-					j = j - 1;
-				}
-				table[j + 1] = temp;
-				i++;
-			}
-		}
-		case ByServerTime:
-		{
-			int i = 1;
-			while (i < max + 1)
-			{
-				MapStatsEntry temp = table[i];
-				int j = i - 1;
-				while (j >= 0 && table[j].ServerTime > temp.ServerTime)
-				{
-					table[j + 1] = table[j];
-					j = j - 1;
-				}
-				table[j + 1] = temp;
-				i++;
-			}
-		}
-		case ByPlayerTime:
-		{
-			int i = 1;
-			while (i < max + 1)
-			{
-				MapStatsEntry temp = table[i];
-				int j = i - 1;
-				while (j >= 0 && table[j].PlayerTime > temp.PlayerTime)
-				{
-					table[j + 1] = table[j];
-					j = j - 1;
-				}
-				table[j + 1] = temp;
-				i++;
-			}
-		}
-		case ByDataPoints:
-		{
-			int i = 1;
-			while (i < max + 1)
-			{
-				MapStatsEntry temp = table[i];
-				int j = i - 1;
-				while (j >= 0 && table[j].DataPoints > temp.DataPoints)
-				{
-					table[j + 1] = table[j];
-					j = j - 1;
-				}
-				table[j + 1] = temp;
-				i++;
-			}
-		}
-	}
-	
-	//Done sorting! Format and print our table
+
 	PrintToConsole(client, " ==================== MapStats ====================");
 	PrintToConsole(client, " Map name                       | Player Time (Hrs) | Server Time (Hrs) | Data Points");
-	for (int i = 0; i < max + 1; i++)
+	while (result.FetchRow())
 	{
-		char map[32];
-		table[i].GetMapName(map, sizeof(map));
-		PrintToConsole(client, "%-32s|          %-8d |          %-8d |   %-8d", 
-			map, table[i].PlayerTime, table[i].ServerTime, table[i].DataPoints);
+		char mapname[32];
+		result.FetchString(0, mapname, sizeof(mapname));
+		float playertime = result.FetchInt(1) / 60.0;
+		float servertime = result.FetchInt(2) / 60.0;
+		int datapoints = result.FetchInt(3);
+
+		PrintToConsole(client, "%-32s|          %8.2f |          %8.2f |   %8d", 
+			mapname, playertime, servertime, datapoints);
 	}
 	PrintToChat(client, PREFIX ... "Check your console for output.");
 }
