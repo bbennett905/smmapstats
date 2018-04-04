@@ -7,7 +7,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "0.3"
+#define PLUGIN_VERSION "0.4"
 
 public Plugin myinfo = 
 {
@@ -31,7 +31,7 @@ enum SortMethod
 };
 
 ConVar DataInterval;
-bool IsTimerRunning;
+Handle DataTimer;
 
 Database MapStatsDatabase;
 
@@ -132,10 +132,17 @@ public void SQLDefaultQuery(Database db, DBResultSet result, const char[] error,
 public void OnClientPostAdminCheck(int client)
 {
 	//When the first player connects to the server, and the timer isn't already running
-	if (!IsTimerRunning || GetClientCount() == 1)
+	if (!DataTimer && GetClientCount() == 1)
 	{
-		IsTimerRunning = true;
-		CreateTimer(60.0 * DataInterval.IntValue, TimerExpire);
+		DataTimer = CreateTimer(60.0 * DataInterval.IntValue, TimerExpire);
+	}
+}
+
+public void OnClientDisconnect_Post(int client)
+{
+	if (GetClientCount() == 0)
+	{
+		delete DataTimer;
 	}
 }
 
@@ -144,11 +151,11 @@ public Action TimerExpire(Handle timer)
 	if (GetClientCount() > 0)
 	{
 		CollectData();
-		CreateTimer(60.0 * DataInterval.IntValue, TimerExpire);
+		DataTimer = CreateTimer(60.0 * DataInterval.IntValue, TimerExpire);
 	}
 	else
 	{
-		IsTimerRunning = false;
+		DataTimer = null;
 	}
 	return Plugin_Handled;
 }
