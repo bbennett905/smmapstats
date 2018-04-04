@@ -79,8 +79,8 @@ public Action CreateTables(Handle timer)
 	");");
 	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 	
-	char hostname[255];
-	char hostnameSafe[512];
+	char hostname[64];
+	char hostnameSafe[64];
 	char ip[15];
 	char ipSafe[32];
 	FindConVar("hostname").GetString(hostname, sizeof(hostname));
@@ -285,7 +285,7 @@ public void SQLSelectData(Database db, DBResultSet result, const char[] error, i
 		float servertime = result.FetchInt(2) / 60.0;
 		int datapoints = result.FetchInt(3);
 
-		PrintToConsole(client, "| %-32s|          %8.2f |          %8.2f |   %8d |", 
+		PrintToConsole(client, "| %-32s|          %8.2f |          %8.2f |    %8d |", 
 			mapname, playertime, servertime, datapoints);
 	}
 	PrintToConsole(client, "=========================================================================================");
