@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.0.1"
 
 public Plugin myinfo = 
 {
@@ -321,7 +321,7 @@ public int MenuViewStats(Menu menu, MenuAction action, int client, int position)
 					"GROUP BY maps.map_name " ...
 					"ORDER BY maps.map_name ASC;", ipSafe);
 			}
-			else if (StrEqual(info, "servertime"))
+			else if (StrEqual(info, "playertime"))
 			{
 				Format(query, sizeof(query), "SELECT maps.map_name, " ...
 					"maps.connects, " ...
@@ -336,7 +336,7 @@ public int MenuViewStats(Menu menu, MenuAction action, int client, int position)
 					"GROUP BY maps.map_name " ...
 					"ORDER BY SUM(data.player_count * data.data_interval) DESC;", ipSafe);
 			}
-			else if (StrEqual(info, "playertime"))
+			else if (StrEqual(info, "servertime"))
 			{
 				Format(query, sizeof(query), "SELECT maps.map_name, " ...
 					"maps.connects, " ...
