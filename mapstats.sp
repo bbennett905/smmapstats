@@ -1,6 +1,5 @@
 #include <sourcemod>
 #include <sdktools>
-#include <dynamic>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -19,15 +18,6 @@ public Plugin myinfo =
 
 #define PREFIX "[MapStats] "
 #define DATABASE "mapstats"
-#define MAX_MAPS 100
-
-enum SortMethod 
-{
-	ByName = 0,
-	ByServerTime,
-	ByPlayerTime,
-	ByDataPoints
-};
 
 ConVar DataInterval;
 Handle DataTimer;
@@ -57,6 +47,9 @@ public void OnPluginStart()
 		ThrowError(PREFIX ... "Database config not found! (sourcemod/configs/databases.cfg)");
 		SetFailState(PREFIX ... "Database config not found! (sourcemod/configs/databases.cfg)");
 	}
+	
+	HookEvent("player_connect", EventPlayerConnect, EventHookMode_Post);
+	HookEvent("player_disconnect", EventPlayerDisconnect, EventHookMode_Pre);
 }
 
 public Action CreateTables(Handle timer)
@@ -108,12 +101,12 @@ public Action CreateTables(Handle timer)
 		"ON DUPLICATE KEY UPDATE " ...
 		"server_name = '%s';", hostnameSafe, ipSafe, hostnameSafe);
 	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
+	
+	return Plugin_Handled;
 }
 
-public void OnMapStart()
+public Action InsertMap(Handle timer)
 {
-	MapConnects = 0;
-	MapDisconnects = 0;
 	char ip[15];
 	char ipSafe[32];
 	char map[PLATFORM_MAX_PATH];
@@ -131,6 +124,16 @@ public void OnMapStart()
 		") ON DUPLICATE KEY UPDATE map_name=map_name;", 
     	mapSafe, ipSafe);
 	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
+	
+	return Plugin_Handled;
+}
+
+public void OnMapStart()
+{
+	MapConnects = 0;
+	MapDisconnects = 0;
+	
+	CreateTimer(1.0, InsertMap); 
 }
 
 public void SQLConnect(Database db, const char[] error, any data)
@@ -167,6 +170,24 @@ public void SQLDefaultQuery(Database db, DBResultSet result, const char[] error,
 /*		DATA COLLECTION																*/
 /*	==============================================================================	*/
 
+public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadcast)
+{
+	int isBot = GetEventInt(event, "bot", -1);
+	if (!isBot)
+	{
+		MapConnects++;
+	}
+}
+
+public Action EventPlayerDisconnect(Event event, const char[] name, bool dontBroadcast)
+{
+	bool isBot = IsFakeClient(GetClientOfUserId(GetEventInt(event, "userid", -1)));
+	if (!isBot)
+	{
+		MapDisconnects++;
+	}
+}
+
 public void OnClientPostAdminCheck(int client)
 {
 	//When the first player connects to the server, and the timer isn't already running
@@ -174,7 +195,6 @@ public void OnClientPostAdminCheck(int client)
 	{
 		DataTimer = CreateTimer(60.0 * DataInterval.IntValue, TimerExpire);
 	}
-	MapConnects++;
 }
 
 public void OnClientDisconnect_Post(int client)
@@ -183,7 +203,26 @@ public void OnClientDisconnect_Post(int client)
 	{
 		delete DataTimer;
 	}
-	MapDisconnects++;
+}
+
+public void OnMapEnd()
+{
+	char ip[15];
+	char ipSafe[32];
+	char map[PLATFORM_MAX_PATH];
+	char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
+	FindConVar("ip").GetString(ip, sizeof(ip));
+	GetCurrentMap(map, sizeof(map));
+	MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
+	MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
+	
+	char query[512];
+	Format(query, sizeof(query), "UPDATE `mapstats_maps` " ...
+		"SET connects=connects+%d, disconnects=disconnects+%d " ...
+		"WHERE map_name = '%s' AND " ...
+		"server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s');",
+		MapConnects, MapDisconnects, mapSafe, ipSafe); 
+	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 }
 
 public Action TimerExpire(Handle timer)
@@ -218,9 +257,9 @@ void CollectData()
 			"(SELECT server_id FROM `mapstats_servers` WHERE ip = '%s'), " ...
 			"(SELECT map_id FROM `mapstats_maps` WHERE " ...
             	"map_name = '%s' AND " ...
-            	"server_id = (SELECT server_id 
-            		FROM `mapstats_servers` 
-            		WHERE ip = '%s'" ...
+            	"server_id = (SELECT server_id " ...
+            		"FROM `mapstats_servers` " ...
+            		"WHERE ip = '%s'" ...
             	") " ...
         	")," ...
 			"%d, " ...
@@ -264,42 +303,66 @@ public int MenuViewStats(Menu menu, MenuAction action, int client, int position)
 			MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
 
 			char query[512];
-			Format(query, sizeof(query), "SELECT map_name, data_interval, player_count " ...
-				"FROM `mapstats_data` WHERE server_id = ( " ...
-					"SELECT server_id FROM `mapstats_servers` WHERE ip = '%s'" ...
-		    	");", ipSafe);
 		    	
 			if (StrEqual(info, "name"))
 			{
-				Format(query, sizeof(query), "SELECT map_name, SUM(player_count * data_interval), SUM(data_interval), COUNT(data_id) " ...
-				    "FROM `mapstats_data` " ...
-				    "WHERE server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s') " ...
-				    "GROUP BY map_name " ...
-				    "ORDER BY map_name ASC", ipSafe);
+				Format(query, sizeof(query), "SELECT maps.map_name, " ...
+					"maps.connects, " ...
+					"maps.disconnects, " ...
+					"SUM(data.player_count * data.data_interval), " ...
+					"SUM(data.data_interval), " ...
+					"COUNT(data.data_id) " ...
+					"FROM `mapstats_maps` AS maps INNER JOIN `mapstats_data` AS data ON " ...
+					"(maps.map_id=data.map_id) " ...
+					"WHERE maps.server_id = (SELECT server_id " ...
+						"FROM `mapstats_servers` WHERE ip = '%s') " ...
+					"GROUP BY maps.map_name " ...
+					"ORDER BY maps.map_name ASC;", ipSafe);
 			}
 			else if (StrEqual(info, "servertime"))
 			{
-				Format(query, sizeof(query), "SELECT map_name, SUM(player_count * data_interval), SUM(data_interval), COUNT(data_id) " ...
-				    "FROM `mapstats_data` " ...
-				    "WHERE server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s') " ...
-				    "GROUP BY map_name " ...
-				    "ORDER BY SUM(player_count * data_interval) DESC", ipSafe);
+				Format(query, sizeof(query), "SELECT maps.map_name, " ...
+					"maps.connects, " ...
+					"maps.disconnects, " ...
+					"SUM(data.player_count * data.data_interval), " ...
+					"SUM(data.data_interval), " ...
+					"COUNT(data.data_id) " ...
+					"FROM `mapstats_maps` AS maps INNER JOIN `mapstats_data` AS data ON " ...
+					"(maps.map_id=data.map_id) " ...
+					"WHERE maps.server_id = (SELECT server_id " ...
+						"FROM `mapstats_servers` WHERE ip = '%s') " ...
+					"GROUP BY maps.map_name " ...
+					"ORDER BY SUM(data.player_count * data.data_interval) DESC;", ipSafe);
 			}
 			else if (StrEqual(info, "playertime"))
 			{
-				Format(query, sizeof(query), "SELECT map_name, SUM(player_count * data_interval), SUM(data_interval), COUNT(data_id) " ...
-				    "FROM `mapstats_data` " ...
-				    "WHERE server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s') " ...
-				    "GROUP BY map_name " ...
-				    "ORDER BY SUM(data_interval) DESC", ipSafe);
+				Format(query, sizeof(query), "SELECT maps.map_name, " ...
+					"maps.connects, " ...
+					"maps.disconnects, " ...
+					"SUM(data.player_count * data.data_interval), " ...
+					"SUM(data.data_interval), " ...
+					"COUNT(data.data_id) " ...
+					"FROM `mapstats_maps` AS maps INNER JOIN `mapstats_data` AS data ON " ...
+					"(maps.map_id=data.map_id) " ...
+					"WHERE maps.server_id = (SELECT server_id " ...
+						"FROM `mapstats_servers` WHERE ip = '%s') " ...
+					"GROUP BY maps.map_name " ...
+					"ORDER BY SUM(data.data_interval) DESC;", ipSafe);
 			}
 			else if (StrEqual(info, "datapoints"))
 			{
-				Format(query, sizeof(query), "SELECT map_name, SUM(player_count * data_interval), SUM(data_interval), COUNT(data_id) " ...
-				    "FROM `mapstats_data` " ...
-				    "WHERE server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s') " ...
-				    "GROUP BY map_name " ...
-				    "ORDER BY COUNT(data_id) DESC", ipSafe);
+				Format(query, sizeof(query), "SELECT maps.map_name, " ...
+					"maps.connects, " ...
+					"maps.disconnects, " ...
+					"SUM(data.player_count * data.data_interval), " ...
+					"SUM(data.data_interval), " ...
+					"COUNT(data.data_id) " ...
+					"FROM `mapstats_maps` AS maps INNER JOIN `mapstats_data` AS data ON " ...
+					"(maps.map_id=data.map_id) " ...
+					"WHERE maps.server_id = (SELECT server_id " ...
+						"FROM `mapstats_servers` WHERE ip = '%s') " ...
+					"GROUP BY maps.map_name " ...
+					"ORDER BY COUNT(data.data_id) DESC;", ipSafe);
 			}
 			MapStatsDatabase.Query(SQLSelectData, query, client, DBPrio_Normal);
 		}
@@ -321,20 +384,23 @@ public void SQLSelectData(Database db, DBResultSet result, const char[] error, i
 	}
 
 	PrintToConsole(client, "");
-	PrintToConsole(client, "======================================- MapStats -=======================================");
-	PrintToConsole(client, "| Map name                        | Player Time (Hrs) | Server Time (Hrs) | Data Points |");
-	PrintToConsole(client, "|---------------------------------------------------------------------------------------|");
+	PrintToConsole(client, "==============================================- MapStats -===============================================");
+	PrintToConsole(client, "| Map name                | Player Hrs | Server Hrs | Connects | Disconnects | C/DC Ratio | Data Points |");
+	PrintToConsole(client, "|-------------------------------------------------------------------------------------------------------|");
 	while (result.FetchRow())
 	{
-		char mapname[32];
+		char mapname[24];
 		result.FetchString(0, mapname, sizeof(mapname));
-		float playertime = result.FetchInt(1) / 60.0;
-		float servertime = result.FetchInt(2) / 60.0;
-		int datapoints = result.FetchInt(3);
+		int connects = result.FetchInt(1);
+		int disconnects = result.FetchInt(2);
+		float playertime = result.FetchInt(3) / 60.0;
+		float servertime = result.FetchInt(4) / 60.0;
+		int datapoints = result.FetchInt(5);
+		float cdcratio = float(connects) / float(disconnects);
 
-		PrintToConsole(client, "| %-32s|          %8.2f |          %8.2f |    %8d |", 
-			mapname, playertime, servertime, datapoints);
+		PrintToConsole(client, "| %-24s|   %8.2f |   %8.2f | %8d |    %8d |   %8.4f |    %8d |", 
+			mapname, playertime, servertime, connects, disconnects, cdcratio, datapoints);
 	}
-	PrintToConsole(client, "=========================================================================================");
+	PrintToConsole(client, "=========================================================================================================");
 	PrintToChat(client, PREFIX ... "Check your console for output.");
 }
