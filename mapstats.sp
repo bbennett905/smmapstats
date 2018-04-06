@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "0.5"
+#define PLUGIN_VERSION "1.0"
 
 public Plugin myinfo = 
 {
@@ -50,6 +50,8 @@ public void OnPluginStart()
 	
 	HookEvent("player_connect", EventPlayerConnect, EventHookMode_Post);
 	HookEvent("player_disconnect", EventPlayerDisconnect, EventHookMode_Pre);
+	
+	LogMessage(PREFIX ... "Version " ... PLUGIN_VERSION ... " by " ... PLUGIN_AUTHOR);
 }
 
 public Action CreateTables(Handle timer)
