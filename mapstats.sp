@@ -5,13 +5,13 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.0.2"
+#define PLUGIN_VERSION "1.1.0"
 
 public Plugin myinfo = 
 {
 	name = "MapStats",
 	author = PLUGIN_AUTHOR,
-	description = "Gathers data on map playtime and population",
+	description = "Gathers data on map playtime and popularity",
 	version = PLUGIN_VERSION,
 	url = "github.com/bbennett905"
 };
@@ -281,7 +281,7 @@ public Action CommandViewStats(int client, int argc)
 	menu.AddItem("name", "Map Name");
 	menu.AddItem("playertime", "Player Time");
 	menu.AddItem("servertime", "Server Time");
-	menu.AddItem("datapoints", "Number of Data Points");
+	menu.AddItem("cdcratio", "Connect/Disconnect Ratio");
 	menu.Display(client, MENU_TIME_FOREVER);
 	return Plugin_Handled;
 }
@@ -354,7 +354,7 @@ public int MenuViewStats(Menu menu, MenuAction action, int client, int position)
 					"GROUP BY maps.map_name " ...
 					"ORDER BY SUM(data.data_interval) DESC;", ipSafe);
 			}
-			else if (StrEqual(info, "datapoints"))
+			else if (StrEqual(info, "cdcratio"))
 			{
 				Format(query, sizeof(query), "SELECT maps.map_name, " ...
 					"maps.connects, " ...
@@ -368,7 +368,7 @@ public int MenuViewStats(Menu menu, MenuAction action, int client, int position)
 					"WHERE maps.server_id = (SELECT server_id " ...
 						"FROM `mapstats_servers` WHERE ip = '%s') " ...
 					"GROUP BY maps.map_name " ...
-					"ORDER BY COUNT(data.data_id) DESC;", ipSafe);
+					"ORDER BY (maps.connects / maps.disconnects) DESC;", ipSafe);
 			}
 			MapStatsDatabase.Query(SQLSelectData, query, client, DBPrio_Normal);
 		}
