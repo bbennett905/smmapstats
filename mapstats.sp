@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.1.0"
+#define PLUGIN_VERSION "1.1.1"
 
 public Plugin myinfo = 
 {
@@ -203,11 +203,17 @@ public void OnClientDisconnect_Post(int client)
 {
 	if (GetClientCount() == 0)
 	{
+		StoreMapData();
 		delete DataTimer;
 	}
 }
 
 public void OnMapEnd()
+{
+	StoreMapData();
+}
+
+void StoreMapData()
 {
 	char ip[15];
 	char ipSafe[32];
@@ -225,6 +231,8 @@ public void OnMapEnd()
 		"server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s');",
 		MapConnects, MapDisconnects, mapSafe, ipSafe); 
 	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
+	MapConnects = 0;
+	MapDisconnects = 0;
 }
 
 public Action TimerExpire(Handle timer)
