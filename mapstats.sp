@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.1.1"
+#define PLUGIN_VERSION "1.1.2"
 
 public Plugin myinfo = 
 {
@@ -23,9 +23,6 @@ ConVar DataInterval;
 Handle DataTimer;
 
 Database MapStatsDatabase;
-
-int MapConnects;
-int MapDisconnects;
 
 /*	==============================================================================	*/
 /*		INITIALIZATION																*/
@@ -132,9 +129,6 @@ public Action InsertMap(Handle timer)
 
 public void OnMapStart()
 {
-	MapConnects = 0;
-	MapDisconnects = 0;
-	
 	CreateTimer(1.0, InsertMap); 
 }
 
@@ -174,19 +168,47 @@ public void SQLDefaultQuery(Database db, DBResultSet result, const char[] error,
 
 public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadcast)
 {
-	int isBot = GetEventInt(event, "bot", -1);
-	if (!isBot)
+	if (!GetEventInt(event, "bot", -1))
 	{
-		MapConnects++;
+		char ip[15];
+		char ipSafe[32];
+		char map[PLATFORM_MAX_PATH];
+		char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
+		FindConVar("ip").GetString(ip, sizeof(ip));
+		GetCurrentMap(map, sizeof(map));
+		MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
+		MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
+		
+		char query[512];
+		Format(query, sizeof(query), "UPDATE `mapstats_maps` " ...
+			"SET connects=connects+1 " ...
+			"WHERE map_name = '%s' AND " ...
+			"server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s');",
+			mapSafe, ipSafe); 
+		MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 	}
 }
 
 public Action EventPlayerDisconnect(Event event, const char[] name, bool dontBroadcast)
 {
-	bool isBot = IsFakeClient(GetClientOfUserId(GetEventInt(event, "userid", -1)));
-	if (!isBot)
+	if (!IsFakeClient(GetClientOfUserId(GetEventInt(event, "userid", -1))))
 	{
-		MapDisconnects++;
+		char ip[15];
+		char ipSafe[32];
+		char map[PLATFORM_MAX_PATH];
+		char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
+		FindConVar("ip").GetString(ip, sizeof(ip));
+		GetCurrentMap(map, sizeof(map));
+		MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
+		MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
+		
+		char query[512];
+		Format(query, sizeof(query), "UPDATE `mapstats_maps` " ...
+			"SET disconnects=disconnects+1 " ...
+			"WHERE map_name = '%s' AND " ...
+			"server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s');",
+			mapSafe, ipSafe); 
+		MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 	}
 }
 
@@ -203,36 +225,8 @@ public void OnClientDisconnect_Post(int client)
 {
 	if (GetClientCount() == 0)
 	{
-		StoreMapData();
 		delete DataTimer;
 	}
-}
-
-public void OnMapEnd()
-{
-	StoreMapData();
-}
-
-void StoreMapData()
-{
-	char ip[15];
-	char ipSafe[32];
-	char map[PLATFORM_MAX_PATH];
-	char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
-	FindConVar("ip").GetString(ip, sizeof(ip));
-	GetCurrentMap(map, sizeof(map));
-	MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
-	MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
-	
-	char query[512];
-	Format(query, sizeof(query), "UPDATE `mapstats_maps` " ...
-		"SET connects=connects+%d, disconnects=disconnects+%d " ...
-		"WHERE map_name = '%s' AND " ...
-		"server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s');",
-		MapConnects, MapDisconnects, mapSafe, ipSafe); 
-	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
-	MapConnects = 0;
-	MapDisconnects = 0;
 }
 
 public Action TimerExpire(Handle timer)
