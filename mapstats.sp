@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.1.3"
+#define PLUGIN_VERSION "1.1.4"
 
 public Plugin myinfo = 
 {
@@ -53,6 +53,9 @@ public void OnPluginStart()
 
 public Action CreateTables(Handle timer)
 {
+	if (!MapStatsDatabase)
+		return Plugin_Handled;
+		
 	char query[512];
 	Format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS `mapstats_servers` (" ...
 		"server_id INT NOT NULL AUTO_INCREMENT, " ...
@@ -106,6 +109,9 @@ public Action CreateTables(Handle timer)
 
 public Action InsertMap(Handle timer)
 {
+	if (!MapStatsDatabase)
+		return Plugin_Handled;
+		
 	char ip[15];
 	char ipSafe[32];
 	char map[PLATFORM_MAX_PATH];
@@ -136,6 +142,7 @@ public void SQLConnect(Database db, const char[] error, any data)
 {	
 	if (db == null)
 	{
+		MapStatsDatabase = null;
 		LogError(PREFIX ... "Database error: %s", error);
 		return;
 	}
@@ -168,6 +175,9 @@ public void SQLDefaultQuery(Database db, DBResultSet result, const char[] error,
 
 public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadcast)
 {
+	if (!MapStatsDatabase)
+		return;
+		
 	if (!GetEventInt(event, "bot", -1))
 	{
 		char ip[15];
@@ -191,6 +201,9 @@ public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadc
 
 public Action EventPlayerDisconnect(Event event, const char[] name, bool dontBroadcast)
 {
+	if (!MapStatsDatabase)
+		return;
+		
 	if (!IsFakeClient(GetClientOfUserId(GetEventInt(event, "userid", -1))))
 	{
 		char ip[15];
@@ -245,6 +258,9 @@ public Action TimerExpire(Handle timer)
 
 void CollectData()
 {
+	if (!MapStatsDatabase)
+		return;
+		
 	char ip[15];
 	char ipSafe[32];
 	char map[PLATFORM_MAX_PATH];
@@ -278,6 +294,11 @@ void CollectData()
 
 public Action CommandViewStats(int client, int argc)
 {
+	if (!MapStatsDatabase)
+	{
+		ReplyToCommand(client, PREFIX ... "Error getting stats! Try again later.");
+		return Plugin_Handled;
+	}
 	if (argc == 0 && client != 0)
 	{
 		Menu menu = new Menu(MenuViewStats);
@@ -470,6 +491,7 @@ public void SQLSelectData(Database db, DBResultSet result, const char[] error, i
 	if (result == null)
 	{
 		LogError(PREFIX ... "SQLSelectData error: %s", error);
+		PrintToChat(client, PREFIX ... "Error getting stats! Try again later.");
 		return;
 	}
 	
