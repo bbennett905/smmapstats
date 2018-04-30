@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.1.4"
+#define PLUGIN_VERSION "1.1.5"
 
 public Plugin myinfo = 
 {
@@ -59,7 +59,7 @@ public Action CreateTables(Handle timer)
 	char query[512];
 	Format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS `mapstats_servers` (" ...
 		"server_id INT NOT NULL AUTO_INCREMENT, " ...
-		"server_name VARCHAR(64), " ...
+		"server_name VARCHAR(128), " ...
 		"ip VARCHAR(16) NOT NULL UNIQUE, " ...
 		"PRIMARY KEY (server_id) " ...
 	");");
@@ -90,8 +90,8 @@ public Action CreateTables(Handle timer)
 	");");
 	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 	
-	char hostname[64];
-	char hostnameSafe[64];
+	char hostname[63];
+	char hostnameSafe[128];
 	char ip[15];
 	char ipSafe[32];
 	FindConVar("hostname").GetString(hostname, sizeof(hostname));
