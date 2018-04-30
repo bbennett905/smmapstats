@@ -178,7 +178,8 @@ public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadc
 	if (!MapStatsDatabase)
 		return;
 		
-	if (!GetEventInt(event, "bot", -1))
+	int client = GetClientOfUserId(GetEventInt(event, "userid", -1));
+	if (client != 0 && !GetEventInt(event, "bot", -1))
 	{
 		char ip[15];
 		char ipSafe[32];
@@ -204,7 +205,8 @@ public Action EventPlayerDisconnect(Event event, const char[] name, bool dontBro
 	if (!MapStatsDatabase)
 		return;
 		
-	if (!IsFakeClient(GetClientOfUserId(GetEventInt(event, "userid", -1))))
+	int client = GetClientOfUserId(GetEventInt(event, "userid", -1));
+	if (client != 0 && !IsFakeClient(client))
 	{
 		char ip[15];
 		char ipSafe[32];
