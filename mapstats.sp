@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.1.5"
+#define PLUGIN_VERSION "1.2.0"
 
 public Plugin myinfo = 
 {
@@ -61,6 +61,7 @@ public Action CreateTables(Handle timer)
 		"server_id INT NOT NULL AUTO_INCREMENT, " ...
 		"server_name VARCHAR(128), " ...
 		"ip VARCHAR(16) NOT NULL UNIQUE, " ...
+		"engine VARCHAR(32) NOT NULL," ...
 		"PRIMARY KEY (server_id) " ...
 	");");
 	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
@@ -98,10 +99,15 @@ public Action CreateTables(Handle timer)
 	FindConVar("ip").GetString(ip, sizeof(ip));
 	MapStatsDatabase.Escape(hostname, hostnameSafe, sizeof(hostnameSafe));
 	MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
-	Format(query, sizeof(query), "INSERT INTO `mapstats_servers` (server_name, ip) " ...
-		"VALUES ('%s', '%s') " ...
+	
+	char engine[32];
+	EngineVersionToString(GetEngineVersion(), engine, sizeof(engine));
+	
+	Format(query, sizeof(query), "INSERT INTO `mapstats_servers` (server_name, ip, engine) " ...
+		"VALUES ('%s', '%s', '%s') " ...
 		"ON DUPLICATE KEY UPDATE " ...
-		"server_name = '%s';", hostnameSafe, ipSafe, hostnameSafe);
+		"server_name = '%s'," ...
+		"engine = '%s';", hostnameSafe, ipSafe, engine, hostnameSafe, engine);
 	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 	
 	return Plugin_Handled;
@@ -531,4 +537,60 @@ public void SQLSelectData(Database db, DBResultSet result, const char[] error, i
 	}
 	PrintToConsole(client, "=========================================================================================================");
 	PrintToChat(client, PREFIX ... "Check your console for output.");
+}
+
+/*	==============================================================================	*/
+/*		ETC																			*/
+/*	==============================================================================	*/
+
+//Use buffer size of 16
+void EngineVersionToString(EngineVersion version, char[] buffer, int maxLen)
+{
+	switch (version)
+	{
+		case Engine_HL2DM:
+		{
+			strcopy(buffer, maxLen, "hl2dm");
+		}
+		case Engine_TF2:
+		{
+			strcopy(buffer, maxLen, "tf2");
+		}
+		case Engine_CSS:
+		{
+			strcopy(buffer, maxLen, "css");
+		}
+		case Engine_CSGO:
+		{
+			strcopy(buffer, maxLen, "csgo");
+		}
+		case Engine_Left4Dead:
+		{
+			strcopy(buffer, maxLen, "l4d");
+		}
+		case Engine_Left4Dead2:
+		{
+			strcopy(buffer, maxLen, "l4d2");
+		}
+		case Engine_AlienSwarm:
+		{
+			strcopy(buffer, maxLen, "alienswarm");
+		}
+		case Engine_NuclearDawn:
+		{
+			strcopy(buffer, maxLen, "nucleardawn");
+		}
+		case Engine_Insurgency:
+		{
+			strcopy(buffer, maxLen, "insurgency");
+		}
+		case Engine_BlackMesa:
+		{
+			strcopy(buffer, maxLen, "blackmesa");
+		}
+		default:
+		{
+			strcopy(buffer, maxLen, "other");
+		}
+	}
 }
