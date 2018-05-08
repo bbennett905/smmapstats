@@ -1,0 +1,77 @@
+﻿@model MapStatsWeb.Models.MapstatsViewModel
+
+@{
+    ViewData["Title"] = "Servers";
+}
+
+<div style="max-width:80%;min-width:800px;margin:auto;">
+    <button type="button" class="btn btn-secondary btn-block btn-static" style="padding-left:25px;padding-right:25px;">
+        <span class="float-left">Server Name</span>
+        <span class="float-right">IP Address</span>
+    </button>
+    <div class="btn-group-vertical btn-block" data-toggle="buttons" style="margin-top:0px;">
+        @{int i = 0;}
+        @foreach (var item in Model.Servers)
+        {
+            <button type="button" class="btn btn-block" data-toggle="collapse" href="#collapse_@i" aria-expanded="false" aria-controls="collapseExample" style="padding-left:25px;padding-right:25px;border-width:0px;border-top-width:1px;border-color:#CCCCCC;">
+                <span class="float-left">
+                    <img src="@Html.DisplayFor(modelItem => item.EngineImg)" />
+                    @Html.DisplayFor(modelItem => item.ServerName)
+                </span>
+                <span class="float-right">@Html.DisplayFor(modelItem => item.Ip)</span>
+            </button>
+            <div class="collapse" id="collapse_@i" style="width:98%;margin:auto;">
+                <table class="stats-table table table-hover table-dark table-sm">
+                    <thead>
+                        <tr>
+                            <th style="border-width: 0px;">Map Name</th>
+                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of hours players have played on this map (Playercount * Time)">Player Hours </th>
+                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of hours the server has been on the map with at least one player connected">Server Hours</th>
+                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of times players have connected during this map">Connects</th>
+                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of times players have disconnected during this map">Disconnects</th>
+                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Ratio of connects to disconnects">C/DC Ratio</th>
+                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of data points">Samples</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        @foreach (var map in Model.Data[item.ServerId])
+                        {
+                            <tr>
+                                <td style="text-align: left !important">@Html.DisplayFor(modelItem => map.MapName)</td>
+                                <td>@Html.DisplayFor(modelItem => map.PlayerHours)</td>
+                                <td>@Html.DisplayFor(modelItem => map.ServerHours)</td>
+                                <td>@Html.DisplayFor(modelItem => map.Connects)</td>
+                                <td>@Html.DisplayFor(modelItem => map.Disconnects)</td>
+                                <td>@Html.DisplayFor(modelItem => map.Ratio)</td>
+                                <td>@Html.DisplayFor(modelItem => map.DataPoints)</td>
+                            </tr>
+
+                        }
+                    </tbody>
+                </table>
+
+            </div>
+            i++;
+        }
+    </div>
+</div>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css" />
+
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
+<script>
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
+
+        $('.stats-table').DataTable({
+            "order": [[3, "asc"]],
+            "searching": false,
+            "paging": false,
+            "info": false
+            //"lengthChange": false,
+            //"pageLength": 20
+        });
+    });
+    $('button').click(function (e) {
+        $('.collapse').collapse('hide');
+    });
+</script>

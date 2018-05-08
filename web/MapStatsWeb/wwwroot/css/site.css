@@ -1,0 +1,43 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    background-color: #222;
+    color: #FFF;
+}
+
+footer {
+    color: rgba(255, 255, 255, 0.1);
+    font-size:0.8em;
+    float:right;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.tooltip {
+    opacity: 1 !important;
+}
+
+hr {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.jumbotron {
+    background-color:#303030;
+}
+
+.btn-static {
+    pointer-events: none;
+}
+
+tbody {
+    color: #DDD;
+}
+
+.table-dark {
+    background-color: #303030;
+}
