@@ -45,3 +45,38 @@ tbody {
 i {
     color: rgba(255,255,255,0.5);
 }
+
+.dataTables_paginate {
+    margin-bottom:.5em;
+}
+
+thead>tr {
+    height:52px;
+}
+
+.page-link {
+    padding-top: .25rem;
+    padding-bottom: .25rem;
+    padding-left: .5rem;
+    padding-right: .5rem;
+    background-color: #303030;
+    color:#FFF;
+    margin: 1px;
+    margin-bottom: 6px;
+    border:0px none;
+}
+
+.page-link:hover {
+    background-color: rgba(255,255,255,0.7);
+    color: #303030;
+}
+
+.page-item.active .page-link {
+    background-color: rgba(255,255,255,0.9);
+    color: #303030;
+}
+
+.page-item.disabled .page-link {
+    background-color: #303030;
+    color: rgba(255, 255, 255, 0.2);
+}

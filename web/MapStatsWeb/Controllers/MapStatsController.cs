@@ -54,7 +54,7 @@ namespace MapStatsWeb.Controllers
                     Ip = server.Ip,
                     ServerName = server.ServerName,
                     Version = server.Version,
-                    EngineImg = "images/games/" + server.Engine + ".png"
+                    EngineImg = "/images/games/" + server.Engine + ".png"
                 };
 
                 var timeSince = System.DateTimeOffset.Now;

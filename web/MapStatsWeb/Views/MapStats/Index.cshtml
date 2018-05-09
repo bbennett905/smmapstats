@@ -108,9 +108,9 @@
         }
     </div>
 </div>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap4.min.css" />
 
-<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.16/datatables.min.css" />
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.16/datatables.min.js"></script>
 <script>
     $(document).ready(function () {
         $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
@@ -118,10 +118,10 @@
         $('.stats-table').DataTable({
             "order": [[3, "asc"]],
             "searching": false,
-            "paging": false,
-            "info": false
-            //"lengthChange": false,
-            //"pageLength": 20
+            //"paging": false,
+            "info": false,
+            "lengthChange": false,
+            "pageLength": 20
         });
     });
     $('button').click(function (e) {
