@@ -240,7 +240,7 @@ public Action EventPlayerDisconnect(Event event, const char[] name, bool dontBro
 public void OnClientPostAdminCheck(int client)
 {
 	//When the first player connects to the server, and the timer isn't already running
-	if (!DataTimer && GetClientCount() == 1)
+	if (!DataTimer && GetRealPlayerCount() == 1)
 	{
 		DataTimer = CreateTimer(60.0 * DataInterval.IntValue, TimerExpire);
 	}
@@ -248,7 +248,7 @@ public void OnClientPostAdminCheck(int client)
 
 public void OnClientDisconnect_Post(int client)
 {
-	if (GetClientCount() == 0)
+	if (GetRealPlayerCount() == 0)
 	{
 		delete DataTimer;
 	}
@@ -256,7 +256,7 @@ public void OnClientDisconnect_Post(int client)
 
 public Action TimerExpire(Handle timer)
 {
-	if (GetClientCount() > 0)
+	if (GetRealPlayerCount() > 0)
 	{
 		CollectData();
 		DataTimer = CreateTimer(60.0 * DataInterval.IntValue, TimerExpire);
@@ -296,7 +296,7 @@ void CollectData()
         	")," ...
 			"%d, " ...
 			"%d " ...
-		");", ipSafe, mapSafe, ipSafe, DataInterval.IntValue, GetClientCount());
+		");", ipSafe, mapSafe, ipSafe, DataInterval.IntValue, GetRealPlayerCount());
 	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 }
 
@@ -546,6 +546,17 @@ public void SQLSelectData(Database db, DBResultSet result, const char[] error, i
 /*	==============================================================================	*/
 /*		ETC																			*/
 /*	==============================================================================	*/
+
+int GetRealPlayerCount()
+{
+    int players;
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (IsClientInGame(i) && !IsFakeClient(i))
+            players++;
+    }
+    return players;
+}
 
 //Use buffer size of 16
 void EngineVersionToString(EngineVersion version, char[] buffer, int maxLen)
