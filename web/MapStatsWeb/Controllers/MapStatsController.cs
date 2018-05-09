@@ -18,9 +18,22 @@ namespace MapStatsWeb.Controllers
         // 
         // GET: /mapstats/
 
-        public IActionResult Index()
+        public IActionResult Index(int time = -1, string timeunit = "days")
         {
-            //TODO this might ideally take params for serverid and sortorder
+            if (timeunit == "alltime")
+            {   //Easiest way to do this is just set it to -1 and let everything else handle it
+                time = -1;
+            }
+
+            var validatedTime = time;
+            if (validatedTime < 1)
+            {
+                validatedTime = 10;
+            }
+
+            ViewData["rawtime"] = time;
+            ViewData["time"] = validatedTime;
+            ViewData["timeunit"] = timeunit;
 
             var model = new MapstatsViewModel();
             var serverListRaw = _context.MapstatsServers.ToList();
@@ -43,10 +56,26 @@ namespace MapStatsWeb.Controllers
                     Version = server.Version,
                     EngineImg = "images/games/" + server.Engine + ".png"
                 };
-                serverList.Add(serverViewModel);
 
+                var timeSince = System.DateTimeOffset.Now;
+                if (timeunit == "days")
+                {
+                    timeSince = timeSince.AddDays(0 - time);
+                }
+                else if (timeunit == "months")
+                {
+                    timeSince = timeSince.AddMonths(0 - time);
+                }
+                
+                if (time < 1) //If time is invalid, assume from all time
+                {
+                    timeSince = System.DateTimeOffset.MinValue;
+                }
+
+                serverList.Add(serverViewModel);
                 var dataQuery = from maps in _context.MapstatsMaps
-                                join data in _context.MapstatsData on maps.MapId equals data.MapId into groupedData
+                                join data in _context.MapstatsData.Where(x => x.Timestamp > timeSince)
+                                on maps.MapId equals data.MapId into groupedData
                                 where maps.ServerId == server.ServerId
                                 select new MapDataViewModel
                                 {

@@ -5,6 +5,50 @@
 }
 
 <div style="max-width:80%;min-width:800px;margin:auto;">
+    <div style="overflow:auto;padding:7px;">
+        <div style="float:left;padding-top:3.5px;">
+            @if ((int)ViewData["rawtime"] < 1)
+            {
+                <text>Viewing data from all time</text>
+            }
+            else
+            {
+                <text>Viewing data from the past @ViewData["time"] @ViewData["timeunit"]</text>
+            }
+        </div>
+
+        <form method="get" class="form-inline" style="float:right;">
+            See results from past...&nbsp;
+            <input class="form-control form-control-sm" style="max-width:4em;" type="number" name="time" min="1" step="1" value='@ViewData["time"]' />&nbsp;
+            <select class="form-control form-control-sm" name="timeunit" style="height:100%;">
+                @if ((string)ViewData["timeunit"] == "days")
+                {
+                    <option value="days" selected="selected">Days</option>
+                    <option value="months">Months</option>
+                    <option value="alltime">All Time</option>
+                }
+                else if ((string)ViewData["timeunit"] == "months")
+                {
+                    <option value="days">Days</option>
+                    <option value="months" selected="selected">Months</option>
+                    <option value="alltime">All Time</option>
+                }
+                else if ((string)ViewData["timeunit"] == "alltime")
+                {
+                    <option value="days">Days</option>
+                    <option value="months">Months</option>
+                    <option value="alltime" selected="selected">All Time</option>
+                }
+            </select>&nbsp;
+            <button type="submit" class="btn btn-sm btn-secondary" value="submit">Go</button>
+        </form>
+    </div>
+    <p style="font-size:.9em;padding-top:0px;margin:0px;padding-left:20px;padding-right:20px;padding-bottom:7px;">
+        @if ((int)ViewData["rawtime"] >= 1)
+        {
+            <text><i>Note: Values shown for Connects, Disconnects, and C/DC Ratio are not filtered by time</i></text>
+        }
+    </p>
     <button type="button" class="btn btn-secondary btn-block btn-static" style="padding-left:25px;padding-right:25px;">
         <span class="float-left">Server Name</span>
         <span class="float-right">IP Address</span>
