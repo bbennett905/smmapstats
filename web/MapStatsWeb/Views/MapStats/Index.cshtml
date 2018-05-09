@@ -42,7 +42,16 @@
                                 <td>@Html.DisplayFor(modelItem => map.ServerHours)</td>
                                 <td>@Html.DisplayFor(modelItem => map.Connects)</td>
                                 <td>@Html.DisplayFor(modelItem => map.Disconnects)</td>
-                                <td>@Html.DisplayFor(modelItem => map.Ratio)</td>
+                                <td>
+                                    @if (Double.IsNaN(map.Ratio) || Double.IsInfinity(map.Ratio))
+                                    {
+                                        <text>-</text>
+                                    }
+                                    else
+                                    {
+                                        @Html.DisplayFor(modelItem => map.Ratio)
+                                    }
+                                </td>
                                 <td>@Html.DisplayFor(modelItem => map.DataPoints)</td>
                             </tr>
 
