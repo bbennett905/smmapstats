@@ -12,9 +12,13 @@ This plugin was created as a simple way to find out what maps are the most popul
 	* Hours the server has run the map
 	* Number of times players have connected or disconnected during the map
 	* Ratio of connects to disconnects
+* A web interface to display all statistics
 
-#### Installation ####
-Add an entry to your *sourcemod/configs/databases.cfg* file for "mapstats" with your database info (Note: Only supports MySQL databases). Copy *mapstats.smx* into your *sourcemod/plugins* folder. That's it!
+#### Plugin Installation ####
+Add an entry to your *sourcemod/configs/databases.cfg* file for "mapstats" with your database info (Note: Only supports MySQL databases currently). Copy *mapstats.smx* into your *sourcemod/plugins* folder. That's it!
+
+#### Web Interface Installation ####
+See [here](web/README.md) for installation.
 
 #### Cvars ####
  * *sm_mapstats_interval \<int\>* - Sets the interval between data samples
