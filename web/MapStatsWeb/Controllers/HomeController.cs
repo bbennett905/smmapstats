@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using System;
 
 namespace MapStatsWeb.Controllers
 {
@@ -84,9 +85,9 @@ namespace MapStatsWeb.Controllers
                                     MapName = maps.MapName,
                                     Connects = maps.Connects,
                                     Disconnects = maps.Disconnects,
-                                    Ratio = ((float)maps.Connects) / ((float)maps.Disconnects),
-                                    PlayerHours = ((float)groupedData.Sum(x => x.PlayerCount * x.DataInterval)) / 60.0f,
-                                    ServerHours = ((float)groupedData.Sum(x => x.DataInterval)) / 60.0f,
+                                    Ratio = (float)Math.Round(maps.Connects / ((float)maps.Disconnects), 3),
+                                    PlayerHours = (float)Math.Round(groupedData.Sum(x => x.PlayerCount * x.DataInterval) / 60.0f, 2),
+                                    ServerHours = (float)Math.Round(groupedData.Sum(x => x.DataInterval) / 60.0f, 2),
                                     DataPoints = groupedData.Count()
                                 };
                 dataQuery = dataQuery.OrderByDescending(x => x.Ratio);
