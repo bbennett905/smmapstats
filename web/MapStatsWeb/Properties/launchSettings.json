@@ -23,7 +23,6 @@
     "MapStatsWeb": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "mapstats/",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
