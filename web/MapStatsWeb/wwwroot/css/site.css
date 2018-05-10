@@ -7,8 +7,8 @@
 
 footer {
     color: rgba(255, 255, 255, 0.1);
-    font-size:0.8em;
-    float:right;
+    font-size: 0.8em;
+    float: right;
 }
 
 /* Wrapping element */
@@ -27,7 +27,9 @@ hr {
 }
 
 .jumbotron {
-    background-color:#303030;
+    background-color: #303030;
+    padding: 32px;
+    margin: 0px;
 }
 
 .btn-static {
@@ -47,11 +49,11 @@ i {
 }
 
 .dataTables_paginate {
-    margin-bottom:.5em;
+    margin-bottom: .5em;
 }
 
 thead>tr {
-    height:52px;
+    height: 52px;
 }
 
 .page-link {
@@ -60,10 +62,10 @@ thead>tr {
     padding-left: .5rem;
     padding-right: .5rem;
     background-color: #303030;
-    color:#FFF;
+    color: #FFF;
     margin: 1px;
     margin-bottom: 6px;
-    border:0px none;
+    border: 0px none;
 }
 
 .page-link:hover {
@@ -79,4 +81,25 @@ thead>tr {
 .page-item.disabled .page-link {
     background-color: #303030;
     color: rgba(255, 255, 255, 0.2);
+}
+
+.form-control {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 2px 4px;
+}
+
+input.form-control {
+    max-width: 3em;
+}
+
+.filter-notice {
+    float: right;
+    font-size: .9em;
+    padding: 0px 20px;
+    margin: 0px;
+    padding-bottom: 7px;
+}
+
+.table thead th {
+    border-width: 0px;
 }

@@ -7,8 +7,8 @@
 <div style="max-width:80%;min-width:800px;margin:auto;">
     <div style="overflow:auto;padding:7px;">
         <form method="get" class="form-inline" style="float:right;">
-            See results from past...&nbsp;
-            <input class="form-control form-control-sm" style="max-width:4em;" type="number" name="time" min="1" step="1" value='@ViewData["time"]' />&nbsp;
+            See results from past&nbsp;
+            <input class="form-control form-control-sm" type="number" name="time" min="1" step="1" value='@ViewData["time"]' />&nbsp;
             <select class="form-control form-control-sm" name="timeunit" style="height:100%;">
                 @if ((string)ViewData["timeunit"] == "days")
                 {
@@ -37,8 +37,8 @@
     </div>
     @if ((int)ViewData["rawtime"] >= 1 || (int)ViewData["hiddendata"] > 0)
     {
-    <p style="font-size:.9em;padding-top:0px;margin:0px;padding-left:20px;padding-right:20px;padding-bottom:7px;">
-        <text><i>Note: Values shown for Connects, Disconnects, and C/DC Ratio are not filtered by time</i></text>
+    <p class="filter-notice">
+        <text><i>Note: Values shown for Connects, Disconnects, and C/DC Ratio are not filtered</i></text>
     </p>
     }
     <button type="button" class="btn btn-secondary btn-block btn-static" style="padding-left:25px;padding-right:25px;">
@@ -60,13 +60,13 @@
                 <table class="stats-table table table-hover table-dark table-sm">
                     <thead>
                         <tr>
-                            <th style="border-width: 0px;">Map Name</th>
-                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of hours players have played on this map (Playercount * Time)">Player Hours </th>
-                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of hours the server has been on the map with at least one player connected">Server Hours</th>
-                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of times players have connected during this map">Connects</th>
-                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of times players have disconnected during this map">Disconnects</th>
-                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Ratio of connects to disconnects">C/DC Ratio</th>
-                            <th style="border-width: 0px;" data-toggle="tooltip" data-animation="false" title="Number of data points">Samples</th>
+                            <th>Map Name</th>
+                            <th data-toggle="tooltip" data-animation="false" title="Number of hours players have played on this map (Playercount * Time)">Player Hours </th>
+                            <th data-toggle="tooltip" data-animation="false" title="Number of hours the server has been on the map with at least one player connected">Server Hours</th>
+                            <th data-toggle="tooltip" data-animation="false" title="Number of times players have connected during this map">Connects</th>
+                            <th data-toggle="tooltip" data-animation="false" title="Number of times players have disconnected during this map">Disconnects</th>
+                            <th data-toggle="tooltip" data-animation="false" title="Ratio of connects to disconnects">C/DC Ratio</th>
+                            <th data-toggle="tooltip" data-animation="false" title="Number of data points">Samples</th>
                         </tr>
                     </thead>
                     <tbody id="table-body">
