@@ -75,3 +75,5 @@ _[Ss]cripts
 *.dot[Cc]over
 
 !/Published/*
+/Published/appsettings.json
+/Published/Published/appsettings.json
