@@ -6,17 +6,6 @@
 
 <div style="max-width:80%;min-width:800px;margin:auto;">
     <div style="overflow:auto;padding:7px;">
-        <div style="float:left;padding-top:3.5px;">
-            @if ((int)ViewData["rawtime"] < 1)
-            {
-                <text>Viewing data from all time</text>
-            }
-            else
-            {
-                <text>Viewing data from the past @ViewData["time"] @ViewData["timeunit"]</text>
-            }
-        </div>
-
         <form method="get" class="form-inline" style="float:right;">
             See results from past...&nbsp;
             <input class="form-control form-control-sm" style="max-width:4em;" type="number" name="time" min="1" step="1" value='@ViewData["time"]' />&nbsp;
@@ -40,10 +29,13 @@
                     <option value="alltime" selected="selected">All Time</option>
                 }
             </select>&nbsp;
+            with more than&nbsp;
+            <input class="form-control form-control-sm" type="number" name="hiddendata" min="0" step="1" value='@ViewData["hiddendata"]' />&nbsp;
+            data points&nbsp;
             <button type="submit" class="btn btn-sm btn-secondary" value="submit">Go</button>
         </form>
     </div>
-    @if ((int)ViewData["rawtime"] >= 1)
+    @if ((int)ViewData["rawtime"] >= 1 || (int)ViewData["hiddendata"] > 0)
     {
     <p style="font-size:.9em;padding-top:0px;margin:0px;padding-left:20px;padding-right:20px;padding-bottom:7px;">
         <text><i>Note: Values shown for Connects, Disconnects, and C/DC Ratio are not filtered by time</i></text>

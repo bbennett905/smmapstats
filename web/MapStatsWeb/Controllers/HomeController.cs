@@ -20,7 +20,7 @@ namespace MapStatsWeb.Controllers
         // 
         // GET: /mapstats/
 
-        public IActionResult Index(int time = -1, string timeunit = "days")
+        public IActionResult Index(int time = -1, string timeunit = "days", int hiddendata = 0)
         {
             if (timeunit == "alltime")
             {   //Easiest way to do this is just set it to -1 and let everything else handle it
@@ -36,6 +36,7 @@ namespace MapStatsWeb.Controllers
             ViewData["rawtime"] = time;
             ViewData["time"] = validatedTime;
             ViewData["timeunit"] = timeunit;
+            ViewData["hiddendata"] = hiddendata;
 
             var model = new MapstatsViewModel();
             var serverListRaw = _context.MapstatsServers.ToList().OrderBy(x => x.Engine);
@@ -90,6 +91,12 @@ namespace MapStatsWeb.Controllers
                                     ServerHours = (float)Math.Round(groupedData.Sum(x => x.DataInterval) / 60.0f, 2),
                                     DataPoints = groupedData.Count()
                                 };
+
+                //Remove data below a certain threshold
+                dataQuery = from data in dataQuery
+                            where data.DataPoints > hiddendata
+                            select data;
+
                 dataQuery = dataQuery.OrderByDescending(x => x.Ratio);
                 dataList[server.ServerId] = dataQuery.ToList();
             }
