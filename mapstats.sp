@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.2.1"
+#define PLUGIN_VERSION "1.2.2"
 
 public Plugin myinfo = 
 {
@@ -27,7 +27,7 @@ Database MapStatsDatabase;
 /*	==============================================================================	*/
 /*		INITIALIZATION																*/
 /*	==============================================================================	*/
-	
+
 public void OnPluginStart()
 {
 	RegAdminCmd("sm_mapstats", CommandViewStats, ADMFLAG_CHANGEMAP, "View collected map stats");
@@ -186,10 +186,14 @@ public void SQLDefaultQuery(Database db, DBResultSet result, const char[] error,
 public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!MapStatsDatabase)
+	{
+		LogError(PREFIX ... "EventPlayerConnect called before db connected!");
 		return;
-		
-	int client = GetClientOfUserId(GetEventInt(event, "userid", -1));
-	if (client != 0 && !GetEventInt(event, "bot", -1))
+	}
+	
+	//NOTE: This event fires before client index is assigned! Meaning the previously used check
+	// for client != 0 was throwing out a LOT of actually valid clients
+	if (!GetEventInt(event, "bot", 0))
 	{
 		char ip[15];
 		char ipSafe[32];
@@ -213,10 +217,14 @@ public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadc
 public Action EventPlayerDisconnect(Event event, const char[] name, bool dontBroadcast)
 {
 	if (!MapStatsDatabase)
+	{
+		LogError(PREFIX ... "EventPlayerDisconnect called before db connected!");
 		return;
-		
-	int client = GetClientOfUserId(GetEventInt(event, "userid", -1));
-	if (client != 0 && !IsFakeClient(client))
+	}
+	
+	int userid = GetEventInt(event, "userid", -1);
+	int client = GetClientOfUserId(userid);
+	if (!IsFakeClient(client))
 	{
 		char ip[15];
 		char ipSafe[32];
@@ -271,7 +279,10 @@ public Action TimerExpire(Handle timer)
 void CollectData()
 {
 	if (!MapStatsDatabase)
+	{
+		LogError(PREFIX ... "CollectData called before db connected!");
 		return;
+	}
 		
 	char ip[15];
 	char ipSafe[32];
