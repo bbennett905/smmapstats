@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.2.2"
+#define PLUGIN_VERSION "1.2.4"
 
 public Plugin myinfo = 
 {
@@ -23,6 +23,9 @@ ConVar DataInterval;
 Handle DataTimer;
 
 Database MapStatsDatabase;
+
+int CachedConnects;
+int CachedDisconnects;
 
 /*	==============================================================================	*/
 /*		INITIALIZATION																*/
@@ -45,6 +48,9 @@ public void OnPluginStart()
 		SetFailState(PREFIX ... "Database config not found! (sourcemod/configs/databases.cfg)");
 	}
 	
+	CachedConnects = 0;
+	CachedDisconnects = 0;
+	
 	HookEvent("player_connect", EventPlayerConnect, EventHookMode_Post);
 	HookEvent("player_disconnect", EventPlayerDisconnect, EventHookMode_Pre);
 	
@@ -54,7 +60,10 @@ public void OnPluginStart()
 public Action CreateTables(Handle timer)
 {
 	if (!MapStatsDatabase)
+	{
+		LogError(PREFIX ... "CreateTables called before db connected!");
 		return Plugin_Handled;
+	}
 		
 	char query[512];
 	Format(query, sizeof(query), "CREATE TABLE IF NOT EXISTS `mapstats_servers` (" ...
@@ -120,7 +129,10 @@ public Action CreateTables(Handle timer)
 public Action InsertMap(Handle timer)
 {
 	if (!MapStatsDatabase)
+	{
+		LogError(PREFIX ... "InsertMap called before db connected!");
 		return Plugin_Handled;
+	}
 		
 	char ip[15];
 	char ipSafe[32];
@@ -145,6 +157,8 @@ public Action InsertMap(Handle timer)
 
 public void OnMapStart()
 {
+	CachedConnects = 0;
+	CachedDisconnects = 0;
 	CreateTimer(1.0, InsertMap); 
 }
 
@@ -187,7 +201,8 @@ public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadc
 {
 	if (!MapStatsDatabase)
 	{
-		LogError(PREFIX ... "EventPlayerConnect called before db connected!");
+		CachedConnects++;
+		LogMessage(PREFIX ... "EventPlayerConnect called before db connected!");
 		return;
 	}
 	
@@ -204,12 +219,15 @@ public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadc
 		MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
 		MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
 		
+		int incrementAmount = 1 + CachedConnects;
+		CachedConnects = 0;
+	
 		char query[512];
 		Format(query, sizeof(query), "UPDATE `mapstats_maps` " ...
-			"SET connects=connects+1 " ...
+			"SET connects=connects+%d " ...
 			"WHERE map_name = '%s' AND " ...
 			"server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s');",
-			mapSafe, ipSafe); 
+			incrementAmount, mapSafe, ipSafe); 
 		MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 	}
 }
@@ -218,31 +236,35 @@ public Action EventPlayerDisconnect(Event event, const char[] name, bool dontBro
 {
 	if (!MapStatsDatabase)
 	{
-		LogError(PREFIX ... "EventPlayerDisconnect called before db connected!");
+		CachedDisconnects++;
+		LogMessage(PREFIX ... "EventPlayerDisconnect called before db connected!");
 		return;
 	}
 	
 	int userid = GetEventInt(event, "userid", -1);
 	int client = GetClientOfUserId(userid);
-	if (!IsFakeClient(client))
-	{
-		char ip[15];
-		char ipSafe[32];
-		char map[PLATFORM_MAX_PATH];
-		char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
-		FindConVar("ip").GetString(ip, sizeof(ip));
-		GetCurrentMap(map, sizeof(map));
-		MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
-		MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
-		
-		char query[512];
-		Format(query, sizeof(query), "UPDATE `mapstats_maps` " ...
-			"SET disconnects=disconnects+1 " ...
-			"WHERE map_name = '%s' AND " ...
-			"server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s');",
-			mapSafe, ipSafe); 
-		MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
-	}
+	if (client != 0 && IsFakeClient(client))
+		return;
+
+	char ip[15];
+	char ipSafe[32];
+	char map[PLATFORM_MAX_PATH];
+	char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
+	FindConVar("ip").GetString(ip, sizeof(ip));
+	GetCurrentMap(map, sizeof(map));
+	MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
+	MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
+	
+	int incrementAmount = 1 + CachedDisconnects;
+	CachedDisconnects = 0;
+	
+	char query[512];
+	Format(query, sizeof(query), "UPDATE `mapstats_maps` " ...
+		"SET disconnects=disconnects+%d " ...
+		"WHERE map_name = '%s' AND " ...
+		"server_id = (SELECT server_id FROM `mapstats_servers` WHERE ip = '%s');",
+		incrementAmount, mapSafe, ipSafe); 
+	MapStatsDatabase.Query(SQLDefaultQuery, query, _, DBPrio_Normal);
 }
 
 public void OnClientPostAdminCheck(int client)
