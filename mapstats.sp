@@ -5,7 +5,7 @@
 #pragma newdecls required
 
 #define PLUGIN_AUTHOR "Lithium"
-#define PLUGIN_VERSION "1.2.4"
+#define PLUGIN_VERSION "1.2.5"
 
 public Plugin myinfo = 
 {
@@ -37,14 +37,13 @@ public void OnPluginStart()
 	DataInterval = CreateConVar("sm_mapstats_interval", "15", 
 		"Interval (minutes) between data points");
 	
-	if(SQL_CheckConfig(DATABASE)) //Check if the database is defined in the databases.cfg
+	if (SQL_CheckConfig(DATABASE)) //Check if the database is defined in the databases.cfg
 	{
 		PrintToServer(PREFIX ... "Connecting to database...");
 		Database.Connect(SQLConnect, DATABASE);
 	}
 	else
 	{
-		ThrowError(PREFIX ... "Database config not found! (sourcemod/configs/databases.cfg)");
 		SetFailState(PREFIX ... "Database config not found! (sourcemod/configs/databases.cfg)");
 	}
 	
@@ -140,8 +139,12 @@ public Action InsertMap(Handle timer)
 	char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
 	FindConVar("ip").GetString(ip, sizeof(ip));
 	GetCurrentMap(map, sizeof(map));
+	
+	char mapExploded[8][PLATFORM_MAX_PATH];
+	int count = ExplodeString(map, "/", mapExploded, 8, PLATFORM_MAX_PATH, true);
+	
 	MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
-	MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
+	MapStatsDatabase.Escape(mapExploded[count - 1], mapSafe, sizeof(mapSafe));
 	
 	char query[512];
 	Format(query, sizeof(query), "INSERT INTO `mapstats_maps` (map_name, server_id) " ...
@@ -173,7 +176,7 @@ public void SQLConnect(Database db, const char[] error, any data)
 
 	char driver[8];
 	SQL_ReadDriver(db, driver, sizeof(driver));
-	if(strcmp(driver, "mysql", false) == 0)
+	if (strcmp(driver, "mysql", false) == 0)
 	{
 		PrintToServer(PREFIX ... "Database connected");
 		MapStatsDatabase = db;
@@ -187,7 +190,7 @@ public void SQLConnect(Database db, const char[] error, any data)
 
 public void SQLDefaultQuery(Database db, DBResultSet result, const char[] error, any data)
 {
-	if(result == null)
+	if (result == null)
 	{
 		LogError(PREFIX ... "SQLDefaultQuery error: %s", error);
 	}
@@ -216,8 +219,12 @@ public Action EventPlayerConnect(Event event, const char[] name, bool dontBroadc
 		char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
 		FindConVar("ip").GetString(ip, sizeof(ip));
 		GetCurrentMap(map, sizeof(map));
+		
+		char mapExploded[8][PLATFORM_MAX_PATH];
+		int count = ExplodeString(map, "/", mapExploded, 8, PLATFORM_MAX_PATH, true);
+	
 		MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
-		MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
+		MapStatsDatabase.Escape(mapExploded[count - 1], mapSafe, sizeof(mapSafe));
 		
 		int incrementAmount = 1 + CachedConnects;
 		CachedConnects = 0;
@@ -252,8 +259,12 @@ public Action EventPlayerDisconnect(Event event, const char[] name, bool dontBro
 	char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
 	FindConVar("ip").GetString(ip, sizeof(ip));
 	GetCurrentMap(map, sizeof(map));
+	
+	char mapExploded[8][PLATFORM_MAX_PATH];
+	int count = ExplodeString(map, "/", mapExploded, 8, PLATFORM_MAX_PATH, true);
+	
 	MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
-	MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
+	MapStatsDatabase.Escape(mapExploded[count - 1], mapSafe, sizeof(mapSafe));
 	
 	int incrementAmount = 1 + CachedDisconnects;
 	CachedDisconnects = 0;
@@ -312,8 +323,12 @@ void CollectData()
 	char mapSafe[(PLATFORM_MAX_PATH * 2) + 1];
 	FindConVar("ip").GetString(ip, sizeof(ip));
 	GetCurrentMap(map, sizeof(map));
+	
+	char mapExploded[8][PLATFORM_MAX_PATH];
+	int count = ExplodeString(map, "/", mapExploded, 8, PLATFORM_MAX_PATH, true);
+	
 	MapStatsDatabase.Escape(ip, ipSafe, sizeof(ipSafe));
-	MapStatsDatabase.Escape(map, mapSafe, sizeof(mapSafe));
+	MapStatsDatabase.Escape(mapExploded[count - 1], mapSafe, sizeof(mapSafe));
 	
 	char query[512];
 	Format(query, sizeof(query), "INSERT INTO `mapstats_data` " ...
