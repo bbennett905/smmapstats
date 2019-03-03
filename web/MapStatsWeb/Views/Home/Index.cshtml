@@ -63,6 +63,7 @@
                             <th>Map Name</th>
                             <th data-toggle="tooltip" data-animation="false" title="Number of hours players have played on this map (Playercount * Time)">Player Hours </th>
                             <th data-toggle="tooltip" data-animation="false" title="Number of hours the server has been on the map with at least one player connected">Server Hours</th>
+                            <th data-toggle="tooltip" data-animation="false" title="Average player count within collected data">Avg Players</th>
                             <th data-toggle="tooltip" data-animation="false" title="Number of times players have connected during this map">Connects</th>
                             <th data-toggle="tooltip" data-animation="false" title="Number of times players have disconnected during this map">Disconnects</th>
                             <th data-toggle="tooltip" data-animation="false" title="Ratio of connects to disconnects">C/DC Ratio</th>
@@ -76,6 +77,7 @@
                                 <td style="text-align: left !important">@Html.DisplayFor(modelItem => map.MapName)</td>
                                 <td>@Html.DisplayFor(modelItem => map.PlayerHours)</td>
                                 <td>@Html.DisplayFor(modelItem => map.ServerHours)</td>
+                                <td>@Html.DisplayFor(modelItem => map.AveragePlayers)</td>
                                 <td>@Html.DisplayFor(modelItem => map.Connects)</td>
                                 <td>@Html.DisplayFor(modelItem => map.Disconnects)</td>
                                 <td>

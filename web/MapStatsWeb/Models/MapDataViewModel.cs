@@ -15,5 +15,9 @@ namespace MapStatsWeb.Models
         public float PlayerHours { get; set; }
         public float ServerHours { get; set; }
         public int DataPoints { get; set; }
+        public float AveragePlayers
+        {
+            get { return PlayerHours / ServerHours; }
+        }
     }
 }
