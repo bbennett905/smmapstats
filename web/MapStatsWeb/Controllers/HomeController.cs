@@ -79,7 +79,7 @@ namespace MapStatsWeb.Controllers
                 var dataQuery = from maps in _context.MapstatsMaps
                                 join data in _context.MapstatsData.Where(x => x.Timestamp > timeSince)
                                 on maps.MapId equals data.MapId into groupedData
-                                where maps.ServerId == server.ServerId
+                                where maps.ServerId == server.ServerId && maps.Active == true
                                 select new MapDataViewModel
                                 {
                                     ServerId = maps.ServerId,

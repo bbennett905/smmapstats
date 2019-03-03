@@ -15,6 +15,7 @@ namespace MapStatsWeb.Models
         public string MapName { get; set; }
         public int Connects { get; set; }
         public int Disconnects { get; set; }
+        public bool? Active { get; set; }
 
         public MapstatsServers Server { get; set; }
         public ICollection<MapstatsData> MapstatsData { get; set; }

@@ -101,6 +101,11 @@ namespace MapStatsWeb.Models
                     .HasColumnName("server_id")
                     .HasColumnType("int(11)");
 
+                entity.Property(e => e.Active)
+                    .HasColumnName("active")
+                    .HasColumnType("boolean")
+                    .HasDefaultValue(true);
+
                 entity.HasOne(d => d.Server)
                     .WithMany(p => p.MapstatsMaps)
                     .HasForeignKey(d => d.ServerId)
