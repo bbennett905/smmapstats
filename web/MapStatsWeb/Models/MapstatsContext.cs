@@ -58,13 +58,13 @@ namespace MapStatsWeb.Models
                 entity.HasOne(d => d.Map)
                     .WithMany(p => p.MapstatsData)
                     .HasForeignKey(d => d.MapId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("mapstats_data_ibfk_2");
 
                 entity.HasOne(d => d.Server)
                     .WithMany(p => p.MapstatsData)
                     .HasForeignKey(d => d.ServerId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("mapstats_data_ibfk_1");
             });
 
@@ -104,7 +104,7 @@ namespace MapStatsWeb.Models
                 entity.HasOne(d => d.Server)
                     .WithMany(p => p.MapstatsMaps)
                     .HasForeignKey(d => d.ServerId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .OnDelete(DeleteBehavior.Cascade)
                     .HasConstraintName("mapstats_maps_ibfk_1");
             });
 
