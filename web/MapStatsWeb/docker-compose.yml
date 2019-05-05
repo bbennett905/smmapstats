@@ -1,0 +1,15 @@
+version: "3.2"
+
+services:
+  mapstats:
+    build: .
+    image: mapstats
+    restart: always
+    container_name: mapstats
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: ./appsettings.json
+        target: /app/appsettings.json
+        read_only: true

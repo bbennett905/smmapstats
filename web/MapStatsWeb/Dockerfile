@@ -12,4 +12,5 @@ FROM mcr.microsoft.com/dotnet/core/aspnet:2.2
 
 WORKDIR /app
 COPY --from=build-env /app/out .
+RUN touch appsettings.json
 ENTRYPOINT ["dotnet", "MapStatsWeb.dll"]
